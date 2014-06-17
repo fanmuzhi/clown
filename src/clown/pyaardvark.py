@@ -14,18 +14,42 @@ import logging
 from array import array
 import imp
 
-from pkg_resources import resource_filename
-aardvark32 = resource_filename(__name__, 'aardvark32.so')
-aardvark64 = resource_filename(__name__, 'aardvark64.so')
+import os
+import sys
+import inspect
+
+
+# from pkg_resources import resource_filename
+# # aardvark32 = resource_filename(__name__, 'aardvark32.so')
+# # aardvark64 = resource_filename(__name__, 'aardvark64.so')
+# aardvark32 = resource_filename(__name__, 'aardvark.dll')
+# aardvark64 = resource_filename(__name__, 'aardvark.dll')
+# try:
+#     api = imp.load_dynamic('aardvark', aardvark32)
+# except Exception as e:
+#     logging.error(e)
+#     try:
+#         api = imp.load_dynamic('aardvark', aardvark64)
+#     except Exception as e:
+#         logging.error(e)
+#         api = None
+
 try:
-    api = imp.load_dynamic('aardvark', aardvark32)
-except Exception as e:
-    logging.error(e)
+    import aardvark as api
+except ImportError, ex1:
+    import imp, platform
+    ext = platform.system() == 'Windows' and '.dll' or '.so'
     try:
-        api = imp.load_dynamic('aardvark', aardvark64)
-    except Exception as e:
-        logging.error(e)
-        api = None
+#        api = imp.load_dynamic('aardvark', 'aardvark' + ext)
+#        get current file's ab
+        dll_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        api = imp.load_dynamic('aardvark', dll_path + '/aardvark' + ext)
+#         api = imp.load_dynamic('aardvark', './adapter/aardvark' + ext)
+    except ImportError, ex2:
+        msg  = 'Error importing aardvark%s\n' % ext
+        msg += '  Architecture of aardvark%s may be wrong\n' % ext
+        msg += '%s\n%s' % (ex1, ex2)
+        raise ImportError(msg)
 
 DEFAULT_REG_VAL = 0xFF
 PORT_NOT_FREE = 0x8000
@@ -152,7 +176,7 @@ class Adapter(object):
         except Exception:
             pass
 
-    def find_devices(filter_in_use=True):
+    def find_devices(self, filter_in_use=True):
         """Return a list of port numbers which can be used with :func:`open`.
 
         If *filter_in_use* parameter is `True` devices which are already opened
@@ -220,7 +244,7 @@ class Adapter(object):
 
     def unique_id(self):
         """Return the unique identifier of the device. The identifier is the
-        serial number you can find on the aapter without the ash. Eg. the
+        serial number you can find on the adapter without the ash. e.g. the
         serial number 0012-345678 would be 12345678.
         """
         return api.py_aa_unique_id(self.handle)
@@ -312,21 +336,23 @@ class Adapter(object):
 
 
 if __name__ == "__main__":
-    sn1 = 2237839440
-    sn2 = 2237849511
-    a = Adapter(bitrate=400)
-    b = Adapter(bitrate=400)
-    a.open(serialnumber=sn1)
-    b.open(serialnumber=sn2)
+#     sn1 = 2237594253
+#     sn1 = 2237839440
+#     sn2 = 2237849511
+    a = Adapter(bitrate=100)
+#     b = Adapter(bitrate=400)
+#     a.open(serialnumber=sn1)
+#     b.open(serialnumber=sn2)
+    a.open(portnum=0)
     print a.unique_id()
-    print b.unique_id()
-    #a.slave_addr = 20
-    #print "Port: " + str(a.port)
-    #print "Handle: " + str(a.handle)
-    #print "Slave: " + str(a.slave_addr)
-    #print "Bitrate: " + str(a.bitrate)
-    #print a.read_reg(0x05)
+#     print b.unique_id()
+    a.slave_addr = 16
+    print "Port: " + str(a.port)
+    print "Handle: " + str(a.handle)
+    print "Slave: " + str(a.slave_addr)
+    print "Bitrate: " + str(a.bitrate)
+    print a.read_reg(0x05)
     #print a.read_reg(0x06)
     #print a.read_reg(0x08)
     a.close()
-    b.close()
+#     b.close()
