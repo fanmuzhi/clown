@@ -339,19 +339,19 @@ if __name__ == "__main__":
 #     sn1 = 2237594253
 #     sn1 = 2237839440
 #     sn2 = 2237849511
-    a = Adapter(bitrate=100)
+    a = Adapter(bitrate=400)
 #     b = Adapter(bitrate=400)
 #     a.open(serialnumber=sn1)
 #     b.open(serialnumber=sn2)
     a.open(portnum=0)
-    print a.unique_id()
+#     print a.unique_id()
 #     print b.unique_id()
-    a.slave_addr = 16
+    a.slave_addr = 83
     print "Port: " + str(a.port)
     print "Handle: " + str(a.handle)
     print "Slave: " + str(a.slave_addr)
     print "Bitrate: " + str(a.bitrate)
-    print a.read_reg(0x05)
+    print a.read()
     #print a.read_reg(0x06)
     #print a.read_reg(0x08)
     a.close()
