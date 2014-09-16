@@ -3,10 +3,10 @@ Created on Jun 17, 2014
 
 @author: mzfa
 '''
-from clown import pyaardvark0
+from clown import pyaardvark
 
 if __name__ == '__main__':
-    a = pyaardvark0.Adapter(bitrate=100)
+    a = pyaardvark.Adapter(bitrate=100)
     a.open(portnum=0)
     print a.unique_id()
     a.read_reg(0x05)
