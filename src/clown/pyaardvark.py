@@ -49,6 +49,13 @@ except ImportError, ex1:
 DEFAULT_REG_VAL = 0xFF
 PORT_NOT_FREE = 0x8000
 
+CHG_OPT_ADDR = 0x12
+CHG_CUR_ADDR = 0x14
+CHG_VOL_ADDR = 0x15
+INPUT_CUR_ADDR = 0x3F
+MAN_ID_ADDR = 0xFE
+DEV_ID_ADDR = 0xFF
+
 I2C_STATUS_MAP = [{"msg": "AA_I2C_STATUS_OK", "code": 0},
                   {"msg": "AA_I2C_STATUS_BUS_ERROR", "code": 1},
                   {"msg": "AA_I2C_STATUS_SLA_ACK", "code": 2},
@@ -411,17 +418,23 @@ if __name__ == "__main__":
 #     for i in range(256):
 #         a.sleep(10)
 #         print a.read_reg(i),
-#     a.write_bq707_reg(0x12, 0x7904)
-#     a.write_bq707_reg(0x14, 0x0500)
-    print "Charge Option: ",    a.read_bq707_reg(0x12)
-    print "Charge Current: ",   a.read_bq707_reg(0x14)
-    print "Charge Voltage: ",   a.read_bq707_reg(0x15)
-    print "Input Current: ",    a.read_bq707_reg(0x3F)
-    print "Manufacturer ID: ",  a.read_bq707_reg(0xFE)
-    print "Device ID: ",        a.read_bq707_reg(0xFF)
+
+#     a.write_bq707_reg(CHG_OPT_ADDR, 0x7905)
+
+#     a.write_bq707_reg(CHG_OPT_ADDR, 0x1990)
+#     a.write_bq707_reg(CHG_CUR_ADDR, 0x0200)
+#     a.write_bq707_reg(CHG_VOL_ADDR, 0x1200)
+#     a.write_bq707_reg(INPUT_CUR_ADDR, 0x0400)
+
+    a.write_bq707_reg(CHG_OPT_ADDR, 0x1991)
+#     a.write_bq707_reg(CHG_CUR_ADDR, 0x0000)
+#     a.write_bq707_reg(CHG_VOL_ADDR, 0x0000)
+#     a.write_bq707_reg(INPUT_CUR_ADDR, 0x0400)
+    print "Charge Option: ",    a.read_bq707_reg(CHG_OPT_ADDR)
+    print "Charge Current: ",   a.read_bq707_reg(CHG_CUR_ADDR)
+    print "Charge Voltage: ",   a.read_bq707_reg(CHG_VOL_ADDR)
+    print "Input Current: ",    a.read_bq707_reg(INPUT_CUR_ADDR)
+    print "Manufacturer ID: ",  a.read_bq707_reg(MAN_ID_ADDR)
+    print "Device ID: ",        a.read_bq707_reg(DEV_ID_ADDR)
     a.close()
     print "closed"
-
-#     x = 0x0500
-    
-#     print array('B', [0x14,x >> 8, x & 0x00FF])
