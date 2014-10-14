@@ -50,6 +50,12 @@ EEPROM_REG_ADDRL = 0        # EEPROM register of ADDRESS LOW
 EEPROM_REG_ADDRH = 1        # EEPROM register of ADDRESS HIGH
 EEPROM_REG_RWDATA = 2       # EEPROM register of Data to read and write
 
+CHG_OPT_ADDR = 0x12
+CHG_CUR_ADDR = 0x14
+CHG_VOL_ADDR = 0x15
+INPUT_CUR_ADDR = 0x3F
+MAN_ID_ADDR = 0xFE
+DEV_ID_ADDR = 0xFF
 
 def query_map(mymap, **kvargs):
     """method to search the map (the list of dict, [{}, {}])
@@ -301,26 +307,38 @@ def deswitch(device, chnum):
     wdata = 0x00
     device.write(wdata)
 
+def write_bq24707(device, reg_addr, wata):
+    device.write_reg(reg_addr, [wata & 0x00FF, wata >> 8])
+    
+def read_bq24707(device, reg_addr):
+    ata_in = device.read_reg(reg_addr, length=2)
+    val = hex(ata_in[1]) , hex(ata_in[0])
+    return val
 
 if __name__ == "__main__":
     import time
     from clown.pyaardvark import Adapter
 
-    device = Adapter(bitrate=100)
+    device = Adapter(bitrate=400)
     device.open(portnum=0)
-    print device.unique_id()
-    device.slave_addr = 0x53
-#     for a in COR_EEP_MAP:
-#         name = a["name"]
-#         print name+": "+str(d_readvpd_byname(device, name))+" |",
-    print d_dut_info(device)
-    
-    device.slave_addr = 0x1B
-    for i in range(128):
-        print device.read_reg(i),
+    device.slave_addr = 0x09
+    print "Port: " + str(device.port)+" |",
+    print "Handle: " + str(device.handle)+" |",
+    print "Slave: " + str(device.slave_addr)+" |",
+    print "Bitrate: " + str(device.bitrate)+" |",
+    print "Device ID: "+str(device.unique_id())
+#     write_bq24707(device, CHG_OPT_ADDR, 0x1991)
+#     device.write_reg(CHG_CUR_ADDR, 0x0000)
+#     device.write_reg(CHG_VOL_ADDR, 0x0000)
+#     device.write_reg(INPUT_CUR_ADDR, 0x0400)
+    print "Charge Option: ",    read_bq24707(device,CHG_OPT_ADDR)
+    print "Charge Current: ",   read_bq24707(device,CHG_CUR_ADDR)
+    print "Charge Voltage: ",   read_bq24707(device,CHG_VOL_ADDR)
+    print "Input Current: ",    read_bq24707(device,INPUT_CUR_ADDR)
+    print "Manufacturer ID: ",  read_bq24707(device,MAN_ID_ADDR)
+    print "Device ID: ",        read_bq24707(device,DEV_ID_ADDR)
     device.close()
-    
-    
+    print "closed"
     
     
 #     channel = 0

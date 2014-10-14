@@ -49,12 +49,12 @@ except ImportError, ex1:
 DEFAULT_REG_VAL = 0xFF
 PORT_NOT_FREE = 0x8000
 
-CHG_OPT_ADDR = 0x12
-CHG_CUR_ADDR = 0x14
-CHG_VOL_ADDR = 0x15
-INPUT_CUR_ADDR = 0x3F
-MAN_ID_ADDR = 0xFE
-DEV_ID_ADDR = 0xFF
+# CHG_OPT_ADDR = 0x12
+# CHG_CUR_ADDR = 0x14
+# CHG_VOL_ADDR = 0x15
+# INPUT_CUR_ADDR = 0x3F
+# MAN_ID_ADDR = 0xFE
+# DEV_ID_ADDR = 0xFF
 
 I2C_STATUS_MAP = [{"msg": "AA_I2C_STATUS_OK", "code": 0},
                   {"msg": "AA_I2C_STATUS_BUS_ERROR", "code": 1},
@@ -283,11 +283,12 @@ class Adapter(object):
         if(num_written != length):
             raise_aa_ex(-103)
 
-    def read(self, config=I2CConfig.AA_I2C_NO_FLAGS):
+
+    def read(self, length, config=I2CConfig.AA_I2C_NO_FLAGS):
         '''read 1 byte from slave address
         '''
         # read 1 byte each time for easy
-        length = 1
+#         length = 2
         ata_in = array_u08(length)
         (ret, num_read) = api.py_aa_i2c_read_ext(self.handle,
                                                  self.slave_addr,
@@ -299,8 +300,27 @@ class Adapter(object):
             raise_i2c_ex(ret)
         if(num_read != length):
             raise_aa_ex(-102)
-        val = ata_in[0]
+        val = ata_in
         return val
+    
+#     def read_bq707(self, config=I2CConfig.AA_I2C_NO_FLAGS):
+#         '''read 1 byte from slave address
+#         '''
+#         # read 1 byte each time for easy
+#         length = 2
+#         ata_in = array_u08(length)
+#         (ret, num_read) = api.py_aa_i2c_read_ext(self.handle,
+#                                                  self.slave_addr,
+#                                                  config,
+#                                                  length,
+#                                                  ata_in)
+#         if(ret != 0):
+#             api.py_aa_i2c_free_bus(self.handle)
+#             raise_i2c_ex(ret)
+#         if(num_read != length):
+#             raise_aa_ex(-102)
+#         val = hex(ata_in[1]) , hex(ata_in[0])
+#         return val
 
     def write_reg(self, reg_addr, wata):
         '''
@@ -310,10 +330,15 @@ class Adapter(object):
         wata: ata to be write to SMBus register
         '''
         # ata_out must be unsigned char
-        ata_out = [reg_addr, wata]
+        if (type(wata) == int):
+            ata_out = [reg_addr, wata]
+        elif(type(wata) == list):
+            ata_out = [reg_addr] + wata
+        else:
+            raise TypeError("i2c ata to be written is not valid")
         self.write(ata_out)
-
-    def read_reg(self, reg_addr):
+        
+    def read_reg(self, reg_addr, length=1):
         '''
         Read ata from slave device's register
         write the [reg_addr] to slave device first, then read back.
@@ -323,74 +348,32 @@ class Adapter(object):
         self.write(reg_addr, I2CConfig.AA_I2C_NO_STOP)
 
         # read register ata
-        val = self.read()
+        val = self.read(length)
         return val
     
-    def write_bq707(self, wata, config=I2CConfig.AA_I2C_NO_FLAGS):
-        '''write ata to slave address
-        ata can be byte or array of byte
-        '''
-        if(type(wata) == int):
-            ata_out = array('B', [wata])
-            length = 1
-        elif(type(wata) == list):
-            ata_out = array('B', wata)
-            length = len(wata)
-        else:
-            raise TypeError("i2c ata to be written is not valid")
-        (ret, num_written) = api.py_aa_i2c_write_ext(self.handle,
-                                                     self.slave_addr,
-                                                     config,
-                                                     length,
-                                                     ata_out)
-        if(ret != 0):
-            api.py_aa_i2c_free_bus(self.handle)
-            raise_i2c_ex(ret)
-        if(num_written != length):
-            raise_aa_ex(-103)
-
-    def read_bq707(self, config=I2CConfig.AA_I2C_NO_FLAGS):
-        '''read 1 byte from slave address
-        '''
-        # read 1 byte each time for easy
-        length = 2
-        ata_in = array_u08(length)
-        (ret, num_read) = api.py_aa_i2c_read_ext(self.handle,
-                                                 self.slave_addr,
-                                                 config,
-                                                 length,
-                                                 ata_in)
-        if(ret != 0):
-            api.py_aa_i2c_free_bus(self.handle)
-            raise_i2c_ex(ret)
-        if(num_read != length):
-            raise_aa_ex(-102)
-        val = hex(ata_in[1]) , hex(ata_in[0])
-        return val
-
-    def write_bq707_reg(self, reg_addr, wata):
-        '''
-        Write ata list to slave device
-        If write to slave device's register, ata_list = [reg_addr, wata]
-        reg_addr: register address offset
-        wata: ata to be write to SMBus register
-        '''
-        # ata_out must be unsigned char
-        wata =  [reg_addr, wata & 0x00FF, wata >> 8]
-        self.write_bq707(wata)
-
-    def read_bq707_reg(self, reg_addr):
-        '''
-        Read ata from slave device's register
-        write the [reg_addr] to slave device first, then read back.
-        reg_addr: register address offset
-        '''
-        val = DEFAULT_REG_VAL
-        self.write_bq707(reg_addr, I2CConfig.AA_I2C_NO_STOP)
-
-        # read register ata
-        val = self.read_bq707()
-        return val
+#     def write_bq707_reg(self, reg_addr, wata):
+#         '''
+#         Write ata list to slave device
+#         If write to slave device's register, ata_list = [reg_addr, wata]
+#         reg_addr: register address offset
+#         wata: ata to be write to SMBus register
+#         '''
+#         # ata_out must be unsigned char
+#         wata =  [reg_addr, wata & 0x00FF, wata >> 8]
+#         self.write_bq707(wata)
+# 
+#     def read_bq707_reg(self, reg_addr):
+#         '''
+#         Read ata from slave device's register
+#         write the [reg_addr] to slave device first, then read back.
+#         reg_addr: register address offset
+#         '''
+#         val = DEFAULT_REG_VAL
+#         self.write_bq707(reg_addr, I2CConfig.AA_I2C_NO_STOP)
+# 
+#         # read register ata
+#         val = self.read_bq707()
+#         return val
 
     def sleep(self, ms):
         '''sleep for specified number of milliseconds
@@ -412,29 +395,11 @@ if __name__ == "__main__":
     print "Handle: " + str(a.handle)+" |",
     print "Slave: " + str(a.slave_addr)+" |",
     print "Bitrate: " + str(a.bitrate)
-#     for i in range(256):
-#         a.write_reg(i,i)
-#         a.sleep(10)
-#     for i in range(256):
-#         a.sleep(10)
-#         print a.read_reg(i),
-
-#     a.write_bq707_reg(CHG_OPT_ADDR, 0x7905)
-
-#     a.write_bq707_reg(CHG_OPT_ADDR, 0x1990)
-#     a.write_bq707_reg(CHG_CUR_ADDR, 0x0200)
-#     a.write_bq707_reg(CHG_VOL_ADDR, 0x1200)
-#     a.write_bq707_reg(INPUT_CUR_ADDR, 0x0400)
-
-    a.write_bq707_reg(CHG_OPT_ADDR, 0x1991)
-#     a.write_bq707_reg(CHG_CUR_ADDR, 0x0000)
-#     a.write_bq707_reg(CHG_VOL_ADDR, 0x0000)
-#     a.write_bq707_reg(INPUT_CUR_ADDR, 0x0400)
-    print "Charge Option: ",    a.read_bq707_reg(CHG_OPT_ADDR)
-    print "Charge Current: ",   a.read_bq707_reg(CHG_CUR_ADDR)
-    print "Charge Voltage: ",   a.read_bq707_reg(CHG_VOL_ADDR)
-    print "Input Current: ",    a.read_bq707_reg(INPUT_CUR_ADDR)
-    print "Manufacturer ID: ",  a.read_bq707_reg(MAN_ID_ADDR)
-    print "Device ID: ",        a.read_bq707_reg(DEV_ID_ADDR)
+    for i in range(256):
+        a.write_reg(i,i)
+        a.sleep(10)
+    for i in range(256):
+        a.sleep(10)
+        print a.read_reg(i),
     a.close()
     print "closed"
