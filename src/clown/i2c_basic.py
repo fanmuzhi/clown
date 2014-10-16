@@ -327,7 +327,7 @@ if __name__ == "__main__":
     print "Slave: " + str(device.slave_addr)+" |",
     print "Bitrate: " + str(device.bitrate)+" |",
     print "Device ID: "+str(device.unique_id())
-#     write_bq24707(device, CHG_OPT_ADDR, 0x1991)
+    write_bq24707(device, CHG_OPT_ADDR, 0x1991)
 #     device.write_reg(CHG_CUR_ADDR, 0x0000)
 #     device.write_reg(CHG_VOL_ADDR, 0x0000)
 #     device.write_reg(INPUT_CUR_ADDR, 0x0400)
